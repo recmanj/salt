@@ -1338,11 +1338,13 @@ class SSLIOStream(IOStream):
             # to cause do_handshake to raise EBADF and ENOTCONN, so make
             # those errors quiet as well.
             # https://groups.google.com/forum/?fromgroups#!topic/python-tornado/ApucKJat1_0
+            #
+            # Also catching OSError: [Errno 0] Error - https://bugs.python.org/issue31122
             if (self._is_connreset(err) or
-                    err.args[0] in (errno.EBADF, errno.ENOTCONN)):
+                    err.args[0] in (0, errno.EBADF, errno.ENOTCONN)):
                 return self.close(exc_info=True)
             raise
-        except AttributeError:
+        except (AttributeError, OSError):
             # On Linux, if the connection was reset before the call to
             # wrap_socket, do_handshake will fail with an
             # AttributeError.
